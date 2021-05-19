@@ -3,6 +3,7 @@ from pyspark.sql import functions as F
 from sparkmeasure import StageMetrics
 stagemetrics = StageMetrics(spark)
 from utils import clean_column_names, evaluate_metrics
+from download_helper import download_csv
 import re
 
 def top_cessna_models(spark_session, flights_path, aircrafts_path):
@@ -28,11 +29,12 @@ if __name__ == "__main__":
              .builder.appName('top_cessna_models')
              .getOrCreate())
 
-    dbfs_fileStore_prefix = "/FileStore/tables"
-    prefix = "ontimeperformance"
+    download_csv()
+
+    prefix = "/data/ontimeperformance"
     size = "small"
 
     top_cessna_models(spark, 
-                      f"{dbfs_fileStore_prefix}/{prefix}_flights_{size}.csv", 
-                      f"{dbfs_fileStore_prefix}/{prefix}_aircrafts.csv") 
+                      f"{prefix}_flights_{size}.csv", 
+                      f"{prefix}_aircrafts.csv") 
     spark.stop()
