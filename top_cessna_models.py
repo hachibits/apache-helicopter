@@ -21,8 +21,11 @@ def top_cessna_models(spark_session, flights_path, aircrafts_path):
                                           .count()
                                           .orderBy('count', ascending=False))
 
-    for aircraft in clean_column_names(cessna_flights_count).take(3):
-        print("Cessna " + aircraft.model[0:3] + '\t' + str(aircraft.count))
+    models = clean_column_names(cessna_flights_count).drop('tail_num').take(3)
+
+    for (model, count) in models:
+        print("Cessna %s: %i", (model[0:3], count))
+
 
 if __name__ == "__main__":
     spark = (SparkSesssion
