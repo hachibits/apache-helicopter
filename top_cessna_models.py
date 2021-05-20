@@ -8,12 +8,12 @@ import re
 
 def top_cessna_models(spark_session, flights_path, aircrafts_path):
     aircrafts = (spark_session.read.csv(aircrafts_path, inferSchema=True, header=True)
-                              .select(F.col('tailnum').alias('tail_num')))
+                              .select(F.col('tailnum').alias('tail_number')))
 
     flights = (spark_session.read.csv(flights_path, inferSchema=True, header=True)
-                            .select(F.col('tail_number').alias('tail_num')))
+                            .select(F.col('tail_number')))
 
-    aircrafts_flights = aircrafts.join(flights, 'tail_num', 'left_outer').drop('tail_num')
+    aircrafts_flights = aircrafts.join(flights, 'tail_num', 'inner').drop('tail_num')
 
     cessna_flights = aircrafts_flights.filter(F.col('manufacturer') == 'CESSNA')
 
@@ -21,7 +21,7 @@ def top_cessna_models(spark_session, flights_path, aircrafts_path):
                                           .count()
                                           .orderBy('count', ascending=False))
 
-    models = clean_column_names(cessna_flights_count).drop('tail_num').take(3)
+    models = clean_column_names(cessna_flights_count).take(3)
 
     for (model, count) in models:
         print("Cessna %s: %i", (model[0:3], count))
