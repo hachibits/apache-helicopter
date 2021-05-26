@@ -8,22 +8,23 @@ import re
 
 def popular_aircraft_types(spark_session, flights_path, airlines_path, aircrafts_path, country):
     flights = spark_session.read.csv(flights_path, inferSchema=True, header=True)
+    flights = (flights.select([F.col(col).alias(col.replace(' ', '')) for col in flights.columns])
+                      .select(F.col('carrier_code'), F.col('tail_number')))
 
     airlines = (spark_session.read.csv(airlines_path, inferSchema=True, header=True)
-                             .filter(F.col('country') == country))
+                             .filter(F.col('country') == country)
+                             .drop('countr'))
 
     aircrafts = (spark_session.read.csv(aircrafts_path, inferSchema=True, header=True)
-                              #.select(F.col('tailnum').alias('tail_number'), F.col('manufacturer'), F.col('model'), F.col('aircraft_type')))
-                              .withColumnRenamed('tailnum', 'tailnumber'))
+                              .select(F.col('tailnum').alias('tail_number'), F.col('manufacturer'), F.col('model')))
 
-    airlines_flights = (airlines.join(flights, 'carrier_code', 'left_outer').filter(airlines.name.isNotNull())
-                                                                            .orderBy('name'))
-    aircrafts_flights = aircrafts.join(flights, 'tail_number', 'left_outer')
-    airlines_aircrafts = airlines_flights.join(aircrafts_flights, 'flight_number', 'full_outer')
-    (airlines_aircrafts.groupBy('name', 'aircraft_type')
+    airlines_flights = airlines.join(flights, 'carrier_code', 'left_outer').filter(airlines.name.isNotNull())
+
+    airlines_aircrafts = airlines_flights.join(aircrafts, 'tail_number', 'full_outer').dropna() 
+    (airlines_aircrafts.groupBy('name', 'manufacturer', 'model')
                        .count()
-                       .orderBy('count')
-                       .filter(airlines_aircrafts.aircraft_type.isNotNull())).show()
+                       .orderBy('name', ascending=True)
+                       .orderBy('count', ascending=False)).show()
 
 
 if __name__ == "__main__":
