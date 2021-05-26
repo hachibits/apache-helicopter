@@ -13,18 +13,17 @@ def popular_aircraft_types(spark_session, flights_path, airlines_path, aircrafts
 
     airlines = (spark_session.read.csv(airlines_path, inferSchema=True, header=True)
                              .filter(F.col('country') == country)
-                             .drop('countr'))
+                             .drop('country'))
 
     aircrafts = (spark_session.read.csv(aircrafts_path, inferSchema=True, header=True)
                               .select(F.col('tailnum').alias('tail_number'), F.col('manufacturer'), F.col('model')))
 
     airlines_flights = airlines.join(flights, 'carrier_code', 'left_outer').filter(airlines.name.isNotNull())
 
-    airlines_aircrafts = airlines_flights.join(aircrafts, 'tail_number', 'full_outer').dropna() 
-    (airlines_aircrafts.groupBy('name', 'manufacturer', 'model')
-                       .count()
-                       .orderBy('name', ascending=True)
-                       .orderBy('count', ascending=False)).show()
+    airlines_aircrafts = (airlines_flights.join(aircrafts, 'tail_number', 'full_outer').dropna()
+                                                                                       .groupBy('name', 'manufacturer', 'model')
+                                                                                       .count())
+    result = airlines_aircrafts.sort('name', airlines_aircrafts['count'].desc())
 
 
 if __name__ == "__main__":
