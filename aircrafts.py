@@ -1,9 +1,9 @@
 from pyspark.sql import SparkSession
+from pyspark.sql.window import Window
 from pyspark.sql import functions as F
 from sparkmeasure import StageMetrics
 stagemetrics = StageMetrics(spark)
-from utils import clean_column_names, evaluate_metrics
-from download_helper import download_csv
+import download_helper
 import re
 
 def popular_aircraft_types(spark_session, flights_path, airlines_path, aircrafts_path, country):
@@ -23,22 +23,41 @@ def popular_aircraft_types(spark_session, flights_path, airlines_path, aircrafts
     airlines_aircrafts = (airlines_flights.join(aircrafts, 'tail_number', 'full_outer').dropna()
                                                                                        .groupBy('name', 'manufacturer', 'model')
                                                                                        .count())
-    result = airlines_aircrafts.sort('name', airlines_aircrafts['count'].desc())
+    result = airlines_aircrafts.withColumn(
+                "rank", F.rank().over(Window.partitionBy('name').orderBy(F.desc('count')))
+             )
+    #result.show()
+    name = result.collect()[0][0]
+    line = ''
+    i = 0
+    for r in result.collect():
+        if (f.name == name):
+            if (i >= 5):
+                continue
+            else:
+                model = r.model.strip("-")
+                line += f"{r.manufacturer} {model}, "
+                i += 1
+        else:
+            i = 0
+            print("%s \t[%s]" % (name, line[:-2]))
+            name = r.name
+            line = ''
 
 
 if __name__ == "__main__":
     spark = (SparkSesssion
-             .builder.appName('popular_aircraft_types')
+             .builder.appName('aircrafts')
              .getOrCreate())
 
-    download_csv()
+    download_helper.download_csv()
 
     prefix = "/data/ontimeperformance"
     size = "small"
 
-    top_cessna_models(spark, 
-                      f"{prefix}_flights_{size}.csv", 
-                      f"{prefix}_airlines.csv",
-                      f"{prefix}_aircrafts.csv",
-                      country=input()) 
+    popular_aircraft_types(spark, 
+                           f"{prefix}_flights_{size}.csv", 
+                           f"{prefix}_airlines.csv",
+                           f"{prefix}_aircrafts.csv",
+                           country="United States") 
     spark.stop()
