@@ -1,8 +1,11 @@
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from sparkmeasure import StageMetrics
-import re
 import sys
+import re
+
+prefix = "ontimeperformance"
+size = "small"
 
 def top_cessna_models(spark_session, flights_path, aircrafts_path):
     aircrafts_df = (
@@ -40,11 +43,14 @@ if __name__ == "__main__":
         .appName("top_cessna_models")
         .getOrCreate()
     )
-
     #stagemetrics = StageMetrics(spark)
 
-    prefix = "ontimeperformance"
-    size = "small"
+    #stagemetrics.begin()
+    #top_cessna_models(spark, f"./data/{prefix}_flights_{size}.csv", f"./data/{prefix}_aircrafts.csv") 
+    #stagemetrics.end()
+
+    #stagemetrics.print_report()
+
     top_cessna_models(spark, f"./data/{prefix}_flights_{size}.csv", f"./data/{prefix}_aircrafts.csv") 
 
     spark.stop()
