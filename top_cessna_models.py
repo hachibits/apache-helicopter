@@ -5,38 +5,27 @@ import re
 import sys
 
 def top_cessna_models(spark_session, flights_path, aircrafts_path):
-    aircrafts = (
+    aircrafts_df = (
         spark_session.read.csv(aircrafts_path, inferSchema=True, header=True)
-                     #.select(F.col('tailnum').alias('tail_number'))
+        .select(F.col('tailnum').alias('tail_number'), F.col('manufacturer'), F.col('model'))
     )
 
     flights = spark_session.read.csv(flights_path, inferSchema=True, header=True)
+    flights_df = flights.toDF(*[re.sub('^[ \t]+|[ \t]+$', '', x) for x in flights.columns])
 
-    cessna_models = aircrafts.filter(
+    cessna_models = aircrafts_df.filter(
         F.col('manufacturer') == "CESSNA"
     ).withColumn('model', F.regexp_extract(F.col('model'), "\d{3}", 0))
 
-    flights_count = (
-        flights.select(
-            flights.colRegex("^[ \t]+|[ \t]+$")
-        )
-        .groupBy('tail_number')
-        .count()
-    )
-
     cessna_flights_count = (
         F.broadcast(cessna_models).join(
-            flights_count,
-            cessna_models.tailnum == flights_count.tail_number,
+            flights_df,
+            on="tail_number",
             how="left"
         )
         .groupBy('model')
         .count()
         .orderBy('count', ascending=False)
-        #cessna_models.join(flights_count, 'tail_number', 'inner').drop('tail_number')
-        #             .groupBy('model')
-        #             .count()
-        #             .orderBy('count', ascending=False)
     )
 
     models = cessna_flights_count.take(3)
