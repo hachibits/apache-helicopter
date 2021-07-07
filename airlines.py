@@ -41,15 +41,19 @@ def airlines_rankings(spark_session, flights_path, airlines_path, aircrafts_path
 
     aircrafts = aircrafts.withColumn(
         'model', F.regexp_replace(F.col('model'), '-', '')
-    ).withColumn('model', F.regexp_extract(F.col('model'), '\w{3}', 0))
+    ).withColumn('model', F.regexp_extract(F.col('model'), '.+?(?=\d)\d{2}', 0))
 
-
-    airlines_flights = airlines.join(flights, 'carrier_code', 'left_outer').filter(airlines.name.isNotNull())
 
     airlines_aircrafts = (
-        airlines_flights.join(
+        airlines.join(
+            flights,
+            on='carrier_code',
+            how='left_outer'
+        )
+        .filter(airlines.name.isNotNull())
+        .join(
             aircrafts,
-            airlines_flights.tail_number == aircrafts.tailnum,
+            flights.tail_number == aircrafts.tailnum,
             'inner'
         ).dropna()
         .groupBy('name', 'manufacturer', 'model')
