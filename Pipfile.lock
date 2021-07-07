@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "8f4b15c7325e87675cf3d968238cdc58c3b11a08bd188bcaaed691549ffb5668"
+            "sha256": "3afe16147e335d2e80d4fc2116bde2f9f7ba0fdb27742636d1974efd2f3ed1df"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -16,14 +16,6 @@
         ]
     },
     "default": {
-        "googledrivedownloader": {
-            "hashes": [
-                "sha256:26ef906c4a038de6fb36f375b0cb0af6f0b6d7ea9ce019a3a08abc50fd6a3b73",
-                "sha256:4b34c1337b2ff3bf2bd7581818efbdcaea7d50ffd484ccf80809688f5ca0e204"
-            ],
-            "index": "pypi",
-            "version": "==0.4"
-        },
         "py4j": {
             "hashes": [
                 "sha256:36ec57f43ff8ced260a18aa9a4e46c3500a730cac8860e259cbaa546c2b9db2f",
