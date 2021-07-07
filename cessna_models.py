@@ -43,13 +43,6 @@ if __name__ == "__main__":
         .appName("top_cessna_models")
         .getOrCreate()
     )
-    #stagemetrics = StageMetrics(spark)
-
-    #stagemetrics.begin()
-    #top_cessna_models(spark, f"./data/{prefix}_flights_{size}.csv", f"./data/{prefix}_aircrafts.csv") 
-    #stagemetrics.end()
-
-    #stagemetrics.print_report()
 
     top_cessna_models(spark, f"./data/{prefix}_flights_{size}.csv", f"./data/{prefix}_aircrafts.csv") 
 
